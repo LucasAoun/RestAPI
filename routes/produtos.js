@@ -85,11 +85,12 @@ module.exports = (app) => {
     })
 
     //DELETE DE REGISTRO 
-    routeId.delete((req, res)=>{
+    route.delete((req, res)=>{
         mysql.getConnection((error, conn)=>{
             if(error){return res.status(500).send({error:error})}
             conn.query(
-                `DELETE FROM produto WHERE id_produto = ?`, [req.body.id_produto],
+                `DELETE FROM produto WHERE id_produto = ?`,
+                    [req.body.id_produto],
                 (error, result, field)=>{
                     conn.release();
                     if(error){return res.status(500).send({error:error})}
