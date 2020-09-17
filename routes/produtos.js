@@ -6,16 +6,28 @@ module.exports = (app) => {
 
     //GET DE TODOS OS PRODUTOS
     route.get((req,res) =>{
-            /*res.status(200).send({
-                mensagem: 'Registro de todos os produtos!'
-            })*/
             mysql.getConnection((error, conn)=>{
                 if(error){return res.status(500).send({error:error})}
                 conn.query(
                     'SELECT * FROM produto',
                     (error, result, field)=>{
                         if(error){return res.status(500).send({error:error})}
-                        return res.status(200).send({response: result})
+                        const response = {
+                            quantidade: result.length,
+                            produtos: result.map(prod=>{
+                                return{
+                                    id_produto: prod.id_produto,
+                                    nome: prod.nomeProduto,
+                                    preco: prod.precoProduto,
+                                    request:{
+                                        tipo: 'GET',
+                                        descricao: '',
+                                        url: 'http://localhost:3000/produtos/' + prod.id_produto
+                                    }
+                                }
+                            })
+                        }
+                        return res.status(200).send({response})
                     }
                 )
             })
@@ -91,7 +103,7 @@ module.exports = (app) => {
             conn.query(
                 `DELETE FROM produto WHERE id_produto = ?`,
                     [req.body.id_produto],
-                (error, result, field)=>{
+                    (error, result, field)=>{
                     conn.release();
                     if(error){return res.status(500).send({error:error})}
                     return res.status(202).send({mensagem: 'Produto removido com sucesso!!'})
