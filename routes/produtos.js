@@ -42,7 +42,24 @@ module.exports = (app) => {
                 [req.params.id_produto],
                 (error, result, field)=>{
                     if(error){return res.status(500).send({error:error})}
-                    return res.status(200).send({response: result})
+                    if (result.length == 0) {
+                        return res.status(404).send({
+                            mensagem: 'Produto não encontrado'
+                        })
+                    }
+                    const response = {
+                        produto: {
+                            id_produto: result[0].id_produto,
+                            nome: result[0].nomeProduto,
+                            preco: result[0].precoProduto,
+                            request:{
+                                tipo: 'GET',
+                                descricao: 'Retorna detalhes de um produto',
+                                url: 'http://localhost:3000/produtos/'
+                            }
+                        }
+                    }
+                    return res.status(200).send({response})
                 }
             )
         })
@@ -50,26 +67,29 @@ module.exports = (app) => {
     
     //POST DE PRODUTO
     route.post((req, res)=>{
-
-        const produto = {
-            name: req.body.name,
-            price: req.body.price
-        }
-
         mysql.getConnection((error, conn)=>{
             if(error){return res.status(500).send({error:error})}
             conn.query(
                 'INSERT INTO produto (nomeProduto, precoProduto) VALUES (?,?)',
-                [req.body.name, req.body.price],
+                [req.body.nome, req.body.preco],
                 (error, result, field)=>{
                     conn.release();
                     
                     if(error){return res.status(500).send({error:error})}
-
-                        res.status(202).send({
-                        mensagem: 'Produto inserido com sucesso!!!',
-                        id_produto: result.insertId
-                         })
+                    const response = {
+                        mensagem: 'Produto criado com sucesso!',
+                        produtoCriado: {
+                            id_produto: result.id_produto,
+                            nome: req.body.nome,
+                            preco: req.body.preco,
+                            request:{
+                                tipo: 'GET',
+                                descricao: 'Todos os produtos',
+                                url: 'http://localhost:3000/produtos/'
+                            }
+                        }
+                    }
+                        res.status(202).send({response})
                   
                 }
             )
@@ -79,18 +99,31 @@ module.exports = (app) => {
     })
 
     //PATCH DE ATUALIZAÇÃO DE REGISTRO
-    routeId.patch((req, res)=>{
+    route.patch((req, res)=>{
         mysql.getConnection((error, conn)=>{
             if(error){return res.status(500).send({error:error})}
             conn.query(
                 `UPDATE produto SET nomeProduto = ?,
                         precoProduto = ?
                     WHERE id_produto = ?`,
-                    [req.body.name, req.body.price, req.body.id_produto],
+                    [req.body.nome, req.body.preco, req.body.id_produto],
                 (error, result, field)=>{
                     conn.release();
                     if(error){return res.status(500).send({error:error})}
-                    return res.status(202).send({mensagem: 'Produto alterado com sucesso!!'})
+                    const response = {
+                        mensagem: 'Produto atualizado com sucesso!',
+                        produtoCriado: {
+                            id_produto: req.body.id_produto,
+                            nome: req.body.nome,
+                            preco: req.body.preco,
+                            request:{
+                                tipo: 'GET',
+                                descricao: 'Retorna detalhes de um produto',
+                                url: 'http://localhost:3000/produtos/' + req.body.id_produto
+                            }
+                        }
+                    }
+                    return res.status(202).send({response})
                 }
             )
         })
@@ -106,7 +139,19 @@ module.exports = (app) => {
                     (error, result, field)=>{
                     conn.release();
                     if(error){return res.status(500).send({error:error})}
-                    return res.status(202).send({mensagem: 'Produto removido com sucesso!!'})
+                    const response = {
+                        mensagem: 'Produto removido com sucesso!',
+                        request:{
+                            tipo: 'POST',
+                            descricao: 'Insere um produto',
+                            url: 'http://localhost:3000/produtos',
+                            body:{
+                                nome: 'String',
+                                preco: 'Number'
+                            }
+                        }
+                    }
+                    return res.status(202).send({response})
                 }
             )
         })
